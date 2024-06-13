@@ -3,6 +3,7 @@ import * as echarts from "echarts";
 import "../index.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchBrushArea } from "../../store/modules/stock";
+import { Card } from "antd";
 
 const Strategy = ({
   dates,
@@ -26,13 +27,9 @@ const Strategy = ({
     }
     return result;
   }
-  function calculateBOLLUP(dayCount, data) {
+  function calculateBOLLUP(dayCount, data, start, end) {
     var result = [];
-    for (var i = 0, len = data.length; i < len; i++) {
-      if (i < dayCount) {
-        result.push("-");
-        continue;
-      }
+    for (var i = start; i < end + 1; i++) {
       var sum = 0;
       for (var j = 0; j < dayCount; j++) {
         sum += +data[i - j][1];
@@ -46,13 +43,9 @@ const Strategy = ({
     }
     return result;
   }
-  function calculateBOLLDOWN(dayCount, data) {
+  function calculateBOLLDOWN(dayCount, data, start, end) {
     var result = [];
-    for (var i = 0, len = data.length; i < len; i++) {
-      if (i < dayCount) {
-        result.push("-");
-        continue;
-      }
+    for (var i = start; i < end + 1; i++) {
       var sum = 0;
       for (var j = 0; j < dayCount; j++) {
         sum += +data[i - j][1];
@@ -66,7 +59,7 @@ const Strategy = ({
     }
     return result;
   }
-  function calculateRSI(dayCount, dasta) {
+  function calculateRSI(dayCount, data, start, end) {
     var result = [];
     var gain = [];
     var loss = [];
@@ -92,9 +85,9 @@ const Strategy = ({
       }
       result.push(((sumGain / (sumGain + sumLoss)) * 100).toFixed(2));
     }
-    return result;
+    return result.slice(start, end + 1);
   }
-  function calculateKDJ(dayCount, data, type) {
+  function calculateKDJ(dayCount, data, type, start, end) {
     var k = [];
     var d = [];
     var j = [];
@@ -124,33 +117,78 @@ const Strategy = ({
       j.push((3 * currentD - 2 * currentK).toFixed(2));
     }
     if (type === 1) {
-      return k;
+      return k.slice(start, end + 1);
     } else if (type === 2) {
-      return d;
+      return d.slice(start, end + 1);
     } else {
-      return j;
+      return j.slice(start, end + 1);
     }
   }
+
+  function buyPoint(data, start, end) {
+    var res = [];
+    var MA30 = calculateMA(30, data, start, end);
+    var MA50 = calculateMA(50, data, start, end);
+    for (var i = 0; i < end - start; i++) {
+      if (+MA30[i] < +MA50[i] && +MA30[i + 1] > +MA50[i + 1]) {
+        res.push([i, +data[start + i][1]]);
+      }
+    }
+    return res;
+  }
+
+  function sellPoint(data, start, end) {
+    var res = [];
+    var MA30 = calculateMA(30, data, start, end);
+    var MA50 = calculateMA(50, data, start, end);
+    for (var i = 0; i < end - start; i++) {
+      if (+MA30[i] > +MA50[i] && +MA30[i + 1] < +MA50[i + 1]) {
+        res.push([i, +data[start + i][1]]);
+      }
+    }
+    return res;
+  }
+
   useEffect(() => {
+    if (!data.length) return;
     const myChart = echarts.init(chartRef.current);
     const option = {
+      title: {
+        text: 'Brush View',
+        textStyle: {
+          fontSize: 14
+        }
+      },
       legend: {
         data: [
           "MA30",
-        //   "MA50",
-        //   "MA100",
-        //   "MA200",
-        //   "BOLL_MID",
-        //   "BOLL_UP",
-        //   "BOLL_DOWN",
-        //   "RSI",
-        //   "K",
-        //   "D",
-        //   "J",
+          "MA50",
+          "MA100",
+          "MA200",
+          "BOLL_MID",
+          "BOLL_UP",
+          "BOLL_DOWN",
+          "RSI",
+          "K",
+          "D",
+          "J",
         ],
         inactiveColor: "#777",
         bottom: 10,
         left: "center",
+        selected: {
+          MA30: true,
+          MA50: true,
+          MA100: true,
+          MA200: true,
+          BOLL_MID: true,
+          BOLL_UP: true,
+          BOLL_DOWN: true,
+          RSI: false,
+          K: false,
+          D: false,
+          J: false,
+        },
       },
       tooltip: {
         trigger: "axis",
@@ -177,28 +215,28 @@ const Strategy = ({
       grid: {
         bottom: 80,
       },
-    //   dataZoom: [
-    //     {
-    //       textStyle: {
-    //         color: "#8392A5",
-    //       },
-    //       handleIcon:
-    //         "path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z",
-    //       dataBackground: {
-    //         areaStyle: {
-    //           color: "#8392A5",
-    //         },
-    //         lineStyle: {
-    //           opacity: 0.8,
-    //           color: "#8392A5",
-    //         },
-    //       },
-    //       brushSelect: true,
-    //     },
-    //     {
-    //       type: "inside",
-    //     },
-    //   ],
+      //   dataZoom: [
+      //     {
+      //       textStyle: {
+      //         color: "#8392A5",
+      //       },
+      //       handleIcon:
+      //         "path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z",
+      //       dataBackground: {
+      //         areaStyle: {
+      //           color: "#8392A5",
+      //         },
+      //         lineStyle: {
+      //           opacity: 0.8,
+      //           color: "#8392A5",
+      //         },
+      //       },
+      //       brushSelect: true,
+      //     },
+      //     {
+      //       type: "inside",
+      //     },
+      //   ],
       series: [
         {
           type: "candlestick",
@@ -209,6 +247,35 @@ const Strategy = ({
             color0: "#0CF49B",
             borderColor: "#FD1050",
             borderColor0: "#0CF49B",
+          },
+          markPoint: {
+            data: (function () {
+              const res = [];
+              const buy = buyPoint(data, brushArea[0], brushArea[1]);
+              const sell = sellPoint(data, brushArea[0], brushArea[1]);
+              let len = buy.length;
+              while (len--) {
+                res.push({
+                  name: "buy",
+                  value: "buy",
+                  xAxis: buy[len][0],
+                  yAxis: buy[len][1],
+                });
+              }
+              len = sell.length;
+              while (len--) {
+                res.push({
+                  name: "sell",
+                  value: "sell",
+                  xAxis: sell[len][0],
+                  yAxis: sell[len][1],
+                  itemStyle: {
+                    color: "green",
+                  },
+                });
+              }
+              return res;
+            })(),
           },
         },
         {
@@ -221,111 +288,134 @@ const Strategy = ({
             width: 1,
           },
         },
-        // {
-        //   name: "MA50",
-        //   type: "line",
-        //   data: calculateMA(50, data, brushArea[0], brushArea[1]),
-        //   smooth: true,
-        //   showSymbol: false,
-        //   lineStyle: {
-        //     width: 1,
-        //   },
-        // },
-        // {
-        //   name: "MA100",
-        //   type: "line",
-        //   data: calculateMA(100, data, brushArea[0], brushArea[1]),
-        //   smooth: true,
-        //   showSymbol: false,
-        //   lineStyle: {
-        //     width: 1,
-        //   },
-        // },
-        // {
-        //   name: "MA200",
-        //   type: "line",
-        //   data: calculateMA(200, data, brushArea[0], brushArea[1]),
-        //   smooth: true,
-        //   showSymbol: false,
-        //   lineStyle: {
-        //     width: 1,
-        //   },
-        // },
-        // {
-        //   name: "BOLL_MID",
-        //   type: "line",
-        //   data: calculateMA(9, data.slice(brushArea[0], brushArea[1] + 1)),
-        //   smooth: true,
-        //   showSymbol: false,
-        //   lineStyle: {
-        //     width: 1,
-        //   },
-        // },
-        // {
-        //   name: "BOLL_UP",
-        //   type: "line",
-        //   data: calculateBOLLUP(9, data.slice(brushArea[0], brushArea[1] + 1)),
-        //   smooth: true,
-        //   showSymbol: false,
-        //   lineStyle: {
-        //     width: 1,
-        //   },
-        // },
-        // {
-        //   name: "BOLL_DOWN",
-        //   type: "line",
-        //   data: calculateBOLLDOWN(9, data.slice(brushArea[0], brushArea[1] + 1)),
-        //   smooth: true,
-        //   showSymbol: false,
-        //   lineStyle: {
-        //     width: 1,
-        //   },
-        // },
-        // {
-        //   name: "RSI",
-        //   type: "line",
-        //   data: calculateRSI(14, data.slice(brushArea[0], brushArea[1] + 1)),
-        //   smooth: true,
-        //   showSymbol: false,
-        //   lineStyle: {
-        //     width: 1,
-        //   },
-        // },
-        // {
-        //   name: "K",
-        //   type: "line",
-        //   data: calculateKDJ(9, data.slice(brushArea[0], brushArea[1] + 1), 1),
-        //   smooth: true,
-        //   showSymbol: false,
-        //   lineStyle: {
-        //     width: 1,
-        //   },
-        // },
-        // {
-        //   name: "D",
-        //   type: "line",
-        //   data: calculateKDJ(9, data.slice(brushArea[0], brushArea[1] + 1), 2),
-        //   smooth: true,
-        //   showSymbol: false,
-        //   lineStyle: {
-        //     width: 1,
-        //   },
-        // },
-        // {
-        //   name: "J",
-        //   type: "line",
-        //   data: calculateKDJ(9, data.slice(brushArea[0], brushArea[1] + 1), 3),
-        //   smooth: true,
-        //   showSymbol: false,
-        //   lineStyle: {
-        //     width: 1,
-        //   },
-        // },
+        {
+          name: "MA50",
+          type: "line",
+          data: calculateMA(50, data, brushArea[0], brushArea[1]),
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 1,
+          },
+        },
+        {
+          name: "MA100",
+          type: "line",
+          data: calculateMA(100, data, brushArea[0], brushArea[1]),
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 1,
+          },
+        },
+        {
+          name: "MA200",
+          type: "line",
+          data: calculateMA(200, data, brushArea[0], brushArea[1]),
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 1,
+          },
+        },
+        {
+          name: "BOLL_MID",
+          type: "line",
+          data: calculateMA(9, data, brushArea[0], brushArea[1]),
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 1,
+          },
+        },
+        {
+          name: "BOLL_UP",
+          type: "line",
+          data: calculateBOLLUP(9, data, brushArea[0], brushArea[1]),
+          smooth: true,
+          showSymbol: false,
+          areaStyle: {
+            color: "rgb(215,225,252)",
+            opacity: 0.5,
+          },
+          lineStyle: {
+            width: 1,
+          },
+        },
+        {
+          name: "BOLL_DOWN",
+          type: "line",
+          data: calculateBOLLDOWN(9, data, brushArea[0], brushArea[1]),
+          smooth: true,
+          showSymbol: false,
+          areaStyle: {
+            color: "white",
+            opacity: 1,
+          },
+          lineStyle: {
+            width: 1,
+          },
+        },
+        {
+          name: "RSI",
+          type: "line",
+          data: calculateRSI(14, data, brushArea[0], brushArea[1]),
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 1,
+          },
+        },
+        {
+          name: "K",
+          type: "line",
+          data: calculateKDJ(9, data, 1, brushArea[0], brushArea[1]),
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 1,
+          },
+        },
+        {
+          name: "D",
+          type: "line",
+          data: calculateKDJ(9, data, 2, brushArea[0], brushArea[1]),
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 1,
+          },
+        },
+        {
+          name: "J",
+          type: "line",
+          data: calculateKDJ(9, data, 3, brushArea[0], brushArea[1]),
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 1,
+          },
+        },
       ],
     };
     myChart.setOption(option);
   }, [dates, data, brushArea]);
-  return <div ref={chartRef} style={style}></div>;
+  return (
+    <div>
+      <div ref={chartRef} style={style}></div>
+      <Card
+        size="small"
+        title="Strategy View"
+        extra={<a href="#">More</a>}
+        style={{
+          width: 800,
+        }}
+      >
+        <p>Buy: Golden Cross - MA30 & MA50</p>      
+        <p>Sell: Dead Cross - MA30 & MA50</p> 
+      </Card>
+    </div>
+  );
 };
 
 export { Strategy };

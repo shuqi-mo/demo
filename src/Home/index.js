@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchStockList } from "../store/modules/stock";
 import { useEffect } from "react";
 import { Strategy } from "./components/Strategy";
+import { BackTestChart } from "./components/Backtest";
 
 function Home() {
   const { stockList } = useSelector((state) => state.stock);
@@ -38,6 +39,9 @@ function Home() {
       </div>
       <div className="strategy">
         <Strategy dates={dates} data={values} />
+      </div>
+      <div className="backtest">
+        <BackTestChart dates={dates} data={values} />
       </div>
     </div>
   );

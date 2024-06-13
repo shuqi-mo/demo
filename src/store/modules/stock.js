@@ -35,7 +35,7 @@ const fetchStockList = () => {
 
 const fetchBrushArea = () => {
     return async (dispatch) => {
-        dispatch(setBrushArea([4458,4462]))
+        dispatch(setBrushArea([4405,4458]))
     }
 }
 

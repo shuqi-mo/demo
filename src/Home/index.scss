@@ -3,12 +3,22 @@
     width: 800px;
 }
 
-.sidechart {
-    float: left;
-}
-
 .strategy {
     float: left;
     width: 800px;
-    height: 400px;
+    height: 600px;
+}
+
+.backtest {
+    float: left;
+}
+
+.performanceview {
+    height: 40px;
+}
+
+.performance {
+    float: left;
+    width: 120px;
+    height: 40px;
 }

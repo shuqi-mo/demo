@@ -9,7 +9,7 @@ const CandleChart = ({
   data,
   style = { width: "800px", height: "600px" },
 }) => {
-  const {brushArea} = useSelector(state => state.stock);
+  const { brushArea } = useSelector((state) => state.stock);
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(fetchBrushArea());
@@ -140,6 +140,12 @@ const CandleChart = ({
     const myChart = echarts.init(chartRef.current);
     // 2. 准备图表参数
     const option = {
+      title: {
+        text: 'Candlestick View',
+        textStyle: {
+          fontSize: 14
+        }
+      },
       legend: {
         data: [
           "MA30",
@@ -245,16 +251,16 @@ const CandleChart = ({
         {
           type: "inside",
           xAxisIndex: [0, 1],
-          start: 88,
-          end: 90,
+          start: 92,
+          end: 94,
         },
         {
           show: true,
           xAxisIndex: [0, 1],
           type: "slider",
           top: "85%",
-          start: 88,
-          end: 90,
+          start: 92,
+          end: 94,
         },
       ],
       series: [
@@ -325,6 +331,10 @@ const CandleChart = ({
           data: calculateBOLLUP(9, data),
           smooth: true,
           showSymbol: false,
+          areaStyle: {
+            color: 'rgb(215,225,252)',
+            opacity: 0.5
+          },
           lineStyle: {
             width: 1,
           },
@@ -335,6 +345,10 @@ const CandleChart = ({
           data: calculateBOLLDOWN(9, data),
           smooth: true,
           showSymbol: false,
+          areaStyle: {
+            color: 'white',
+            opacity: 1
+          },
           lineStyle: {
             width: 1,
           },
@@ -405,7 +419,7 @@ const CandleChart = ({
       areas: [
         {
           brushType: "lineX",
-          coordRange: [dates[brushArea[0]],dates[brushArea[1]]],
+          coordRange: [dates[brushArea[0]], dates[brushArea[1]]],
           // coordRange: ["26/12/2021", "28/12/2021"],
           xAxisIndex: 0,
         },
@@ -413,7 +427,7 @@ const CandleChart = ({
     });
     // 3. 渲染参数
     myChart.setOption(option);
-  }, [dates, data, dispatch, brushArea]);
+  }, [dates, data, dispatch, brushArea, calculateRSI]);
   return <div ref={chartRef} style={style}></div>;
 };
 
