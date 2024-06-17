@@ -395,7 +395,16 @@ const StrategyAnalysis = ({
   return (
     <div>
       <div ref={chartRef} style={style}></div>
-      {/* <MonacoEditor/> */}
+      <MonacoEditor
+        width="800"
+        height="250"
+        language="javascript"
+        theme="vs-dark"
+        // value={code}
+        // options={options}
+        // onChange={this.onChange}
+        // editorDidMount={this.editorDidMount}
+      />  
     </div>
   );
 };
