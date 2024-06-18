@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchStockList } from "../../store/modules/stock";
 import { useEffect } from "react";
 import { StrategyAnalysis } from "./StrategyAnalysis";
+import { BarChart } from "./BarChart";
 
 function Analysis() {
   const { stockList } = useSelector((state) => state.stock);
@@ -35,8 +36,11 @@ function Analysis() {
       <div className="mainchart">
         <StrategyAnalysis dates={dates} data={values} />
       </div>
+      <div className="mainchart">
+        <BarChart />
+      </div>
     </div>
   );
 }
 
-export {Analysis};
+export { Analysis };
